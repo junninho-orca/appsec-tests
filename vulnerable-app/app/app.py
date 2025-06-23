@@ -2,17 +2,42 @@ from flask import Flask, request, jsonify
 import subprocess
 import yaml
 import hashlib
+from django.http import HttpResponse
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my-super-secret-and-very-long-key'
 app.config['DB_CONN'] = 'postgres://admin:password123@localhost:5432/vulndb'
 
 AWS_ACCESS_KEY_ID = "AKIA1A2B3C4D5E6F7G8H"
-AWS_SECRET_ACCESS_KEY = "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcd"
-GITHUB_TOKEN = "ghp_1234567890abcdefghijklmnopqrstuvwxyzABCD"
-SLACK_TOKEN = "xoxb-123456789012-123456789012-ABCDEFGHIJKLMNO"
-PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC...\n-----END PRIVATE KEY-----"""
-STRIPE_API_KEY_B64 = "c2tfdGVzdF8xMjM0NTZBc2RmZ2hqa2xtbm9wcXJzdHV2d3h5eg=="  # base64 for 'sk_test_123456Asdfghjklmnopqrstuvwxxyz'
+AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+GITHUB_TOKEN = "ghp_s4K8d3g9j1LpQ7vW2mN5cR6bA0fG1eZ3xY7i"
+SLACK_TOKEN = "xoxp-915678901234-987654321098-1234567890123-a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+PRIVATE_KEY = """
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA0jBKnF3TfVSP+e9kZnhy4r/C0aYqG3g2T5dkls5tF3gB6gGg
+B7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj
+4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq
+8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2Xw
+Y3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBg
+B6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7
+D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f
+5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6
+n2XwY3gZ4X+c9gCAwEAAQKBgQC1cZQc8Z5f6bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6g
+GgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0p
+Yj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5b
+Bq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2
+XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9g
+BgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gAoGBAN/3bBq8
+vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3
+gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBgB6
+gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gAoGBAO3j8C7f5bBq
+8vJ5k8Y6n2XwY3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2Xw
+Y3gZ4X+c9gBgB6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9gBg
+B6gGgB7g8pP7D0pYj4A7j8C7f5bBq8vJ5k8Y6n2XwY3gZ4X+c9g==
+-----END RSA PRIVATE KEY-----
+"""
+STRIPE_API_KEY_B64 = "c2tfdGVzdF81MUhpb29NQ0c0aTIxU0h3OVVQRHY0d1VSa2dNQzhzN0hpZmhuZFlVc3Q2NTd2R1VTWnJ3ZFo1aGs2V1ZkMzk2bUNzR1ZtMDBRSVlNWVlZWQ=="
+JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 
 def insecure_md5(data):
     # Insecure MD5 hash usage
@@ -41,6 +66,15 @@ def load_yaml():
     # Unsafe yaml.load usage
     loaded = yaml.load(data)
     return jsonify({'loaded': str(loaded)})
+
+@app.route('/dangerous_django_view')
+def dangerous_django_view(request):
+    cmd = request.GET.get('cmd')
+    if not cmd:
+        return HttpResponse('No command provided', status=400)
+    # Command injection vulnerability (Django)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return HttpResponse(result.stdout)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0') 
