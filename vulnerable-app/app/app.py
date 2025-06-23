@@ -3,6 +3,10 @@ import subprocess
 import yaml
 import hashlib
 from django.http import HttpResponse
+import sqlite3
+import pickle
+import xml.etree.ElementTree as ET
+import tempfile
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my-super-secret-and-very-long-key'
@@ -75,6 +79,44 @@ def dangerous_django_view(request):
     # Command injection vulnerability (Django)
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     return HttpResponse(result.stdout)
+
+@app.route('/sqli')
+def sqli():
+    user_id = request.args.get('id')
+    # SQL Injection vulnerability
+    conn = sqlite3.connect('example.db')
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM users WHERE id = '{user_id}'")
+    user = cursor.fetchone()
+    return jsonify({'user': user})
+
+@app.route('/xxe', methods=['POST'])
+def xxe():
+    xml_data = request.data
+    # XXE vulnerability
+    tree = ET.fromstring(xml_data)
+    return f"Parsed XML: {ET.tostring(tree)}"
+
+@app.route('/pickle', methods=['POST'])
+def insecure_deserialization():
+    pickled_data = request.data
+    # Insecure deserialization with pickle
+    loaded_obj = pickle.loads(pickled_data)
+    return f"Loaded object: {loaded_obj}"
+
+@app.route('/eval')
+def eval_vuln():
+    code = request.args.get('code')
+    # Use of eval() on user input
+    result = eval(code)
+    return f"Eval result: {result}"
+
+def insecure_temp_file():
+    # Insecure temporary file creation
+    temp_path = tempfile.mktemp()
+    with open(temp_path, 'w') as f:
+        f.write("insecure temp file")
+    return temp_path
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0') 
