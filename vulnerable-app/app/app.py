@@ -6,6 +6,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my-super-secret-and-very-long-key'
 app.config['DB_CONN'] = 'postgres://admin:password123@localhost:5432/vulndb'
 
+AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
+AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+
 @app.route('/')
 def index():
     return 'Welcome to the intentionally vulnerable app!'
